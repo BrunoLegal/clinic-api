@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 public class PatientControllerTest {
     @Container
-    static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:15-alpine");
+    static final PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:15-alpine");
 
     @DynamicPropertySource
     private static void configureProperties(DynamicPropertyRegistry registry){
@@ -34,9 +34,6 @@ public class PatientControllerTest {
         registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
     }
 
-    static {
-        postgreSQLContainer.start();
-    }
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
