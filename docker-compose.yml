@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: clinic-db-postgres # Nome fixo para o container
+    environment:
+      POSTGRES_USER: admin             # Usuário do banco
+      POSTGRES_PASSWORD: admin123      # Senha do banco
+      POSTGRES_DB: clinicdb            # Nome do banco de dados que será criado
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Garante que os dados persistam
+
+# Define um volume nomeado para persistir os dados do banco
+volumes:
+  postgres_data:
