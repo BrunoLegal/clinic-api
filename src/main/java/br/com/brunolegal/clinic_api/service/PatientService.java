@@ -7,6 +7,9 @@ import br.com.brunolegal.clinic_api.mapper.PatientMapper;
 import br.com.brunolegal.clinic_api.repository.PatientRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class PatientService {
     final PatientRepository patientRepository;
@@ -28,6 +31,15 @@ public class PatientService {
         return patientMapper.toDetailsDto(savedPatient);
 
     }
+
+    public List<PatientDetailsDTO> listAll(){
+        List<Patient> patients = patientRepository.findAll();
+        return patients.stream()
+                .map(patientMapper::toDetailsDto)
+                .collect(Collectors.toList());
+    }
+
+
 
 
 

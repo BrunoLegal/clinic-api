@@ -1,6 +1,8 @@
 package br.com.brunolegal.clinic_api.controller;
 
+import br.com.brunolegal.clinic_api.domain.Patient;
 import br.com.brunolegal.clinic_api.dto.PatientRegistrationDTO;
+import br.com.brunolegal.clinic_api.repository.PatientRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -10,8 +12,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+
+import java.util.List;
+
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -23,6 +29,7 @@ public class PatientControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private PatientRepository patientRepository;
 
     @Test
     public void register_WhenValidData_ShouldReturnCreated() throws Exception {
@@ -51,6 +58,23 @@ public class PatientControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dummyRegistrationDTO)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void listAllWhenPatientsExist_ShouldReturnOk() throws Exception{
+        //Arrange
+        Patient patient1 = new Patient(null, "Alice Smith", "alicesmith@test.com", "11988887777");
+        Patient patient2 = new Patient(null, "Bob Johnson", "bobjohnson@test.com", "11977776666");
+        patientRepository.saveAll(List.of(patient1, patient2));
+
+        //Act & Assert
+        mockMvc.perform(get("/patients")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].name", is("Alice Smith")))
+                .andExpect(jsonPath("$[1].name", is("Bob Johnson")));
+
     }
 
 }

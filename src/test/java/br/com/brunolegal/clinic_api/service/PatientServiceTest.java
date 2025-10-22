@@ -11,6 +11,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,5 +63,25 @@ public class PatientServiceTest {
 
         verify(patientRepository, never()).save(any());
         verify(patientMapper, never()).toEntity(any());
+    }
+
+    @Test
+    public void listAll_WhenPatientsExist_ShouldReturnDtoList(){
+        //Arrange
+        Patient dummyPatient1 = new Patient(1L, "John Doe", "johndoe@test.com", "11999998888");
+        Patient dummyPatient2 = new Patient(2L, "Jane Smith", "janesmith@test.com", "11988887777");
+        List<Patient> dummyPatientList = List.of(dummyPatient1, dummyPatient2);
+
+        when(patientRepository.findAll()).thenReturn(dummyPatientList);
+
+        //Act
+        List<PatientDetailsDTO> result = patientService.listAll();
+
+        //Assert
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(2);
+        verify(patientRepository).findAll();
+
+
     }
 }
