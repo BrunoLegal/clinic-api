@@ -3,9 +3,14 @@ package br.com.brunolegal.clinic_api.service;
 import br.com.brunolegal.clinic_api.domain.Patient;
 import br.com.brunolegal.clinic_api.dto.PatientDetailsDTO;
 import br.com.brunolegal.clinic_api.dto.PatientRegistrationDTO;
+import br.com.brunolegal.clinic_api.exception.DuplicateResourceException;
+import br.com.brunolegal.clinic_api.exception.ResourceNotFoundException;
 import br.com.brunolegal.clinic_api.mapper.PatientMapper;
 import br.com.brunolegal.clinic_api.repository.PatientRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PatientService {
@@ -19,7 +24,7 @@ public class PatientService {
 
     public PatientDetailsDTO createPatient(PatientRegistrationDTO dto){
         if(patientRepository.existsByEmail(dto.email())){
-            throw new IllegalArgumentException("Email already in use");
+            throw new DuplicateResourceException("Email already in use");
         }
         Patient patient = patientMapper.toEntity(dto);
 
@@ -28,6 +33,21 @@ public class PatientService {
         return patientMapper.toDetailsDto(savedPatient);
 
     }
+
+    public PatientDetailsDTO getPatientById(Long id){
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+        return patientMapper.toDetailsDto(patient);
+    }
+
+    public List<PatientDetailsDTO> listAll(){
+        List<Patient> patients = patientRepository.findAll();
+        return patients.stream()
+                .map(patientMapper::toDetailsDto)
+                .collect(Collectors.toList());
+    }
+
+
 
 
 
