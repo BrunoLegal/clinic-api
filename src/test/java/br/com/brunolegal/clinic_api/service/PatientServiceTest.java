@@ -3,6 +3,8 @@ package br.com.brunolegal.clinic_api.service;
 import br.com.brunolegal.clinic_api.domain.Patient;
 import br.com.brunolegal.clinic_api.dto.PatientDetailsDTO;
 import br.com.brunolegal.clinic_api.dto.PatientRegistrationDTO;
+import br.com.brunolegal.clinic_api.exception.DuplicateResourceException;
+import br.com.brunolegal.clinic_api.exception.ResourceNotFoundException;
 import br.com.brunolegal.clinic_api.mapper.PatientMapper;
 import br.com.brunolegal.clinic_api.repository.PatientRepository;
 import org.junit.jupiter.api.Test;
@@ -59,7 +61,7 @@ public class PatientServiceTest {
         when(patientRepository.existsByEmail(dummyRegistrationDTO.email())).thenReturn(true);
 
         //Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> patientService.createPatient(dummyRegistrationDTO));
+        assertThrows(DuplicateResourceException.class, () -> patientService.createPatient(dummyRegistrationDTO));
 
         verify(patientRepository, never()).save(any());
         verify(patientMapper, never()).toEntity(any());
@@ -84,4 +86,37 @@ public class PatientServiceTest {
 
 
     }
+
+    @Test
+    public void getPatientById_WhenPatientExists_ShouldReturnPatientDetails() {
+        //Arrange
+        Long patientId = 1L;
+        Patient dummyPatient = new Patient(patientId, "John Doe", "johndoe@test.com", "11999998888");
+        PatientDetailsDTO dummyPatientDetailsDTO = new PatientDetailsDTO(patientId, "John Doe", "johndoe@test.com", "11999998888");
+        when(patientRepository.findById(patientId)).thenReturn(java.util.Optional.of(dummyPatient));
+        when(patientMapper.toDetailsDto(dummyPatient)).thenReturn(dummyPatientDetailsDTO);
+
+        //Act
+        PatientDetailsDTO result = patientService.getPatientById(patientId);
+
+        //Assert
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(dummyPatientDetailsDTO);
+        verify(patientRepository).findById(patientId);
+
+    }
+
+    @Test
+    public void getPatientById_WhenPatientDoesNotExist_ShouldThrowException() {
+        //Arrange
+        Long patientId = 99L;
+        when(patientRepository.findById(patientId)).thenReturn(java.util.Optional.empty());
+
+        //Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> patientService.getPatientById(patientId));
+
+        verify(patientRepository).findById(patientId);
+        verify(patientMapper, never()).toDetailsDto(any());
+    }
+
 }

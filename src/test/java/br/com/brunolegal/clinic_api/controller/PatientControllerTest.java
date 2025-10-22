@@ -4,6 +4,7 @@ import br.com.brunolegal.clinic_api.domain.Patient;
 import br.com.brunolegal.clinic_api.dto.PatientRegistrationDTO;
 import br.com.brunolegal.clinic_api.repository.PatientRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ public class PatientControllerTest {
     @Autowired private PatientRepository patientRepository;
 
     @Test
+    @Transactional
     public void register_WhenValidData_ShouldReturnCreated() throws Exception {
         //Arrange
         PatientRegistrationDTO dummyRegistrationDTO = new PatientRegistrationDTO("John Doe", "johndoe@test.com", "11999998888");
@@ -47,8 +49,23 @@ public class PatientControllerTest {
 
 
     }
+    @Test
+    @Transactional
+    public void register_WhenDuplicateEmail_ShouldReturnConflict() throws Exception {
+        //Arrange
+        Patient existingPatient = new Patient(null, "John Doe", "johndoe@test.com", "11999998888");
+        patientRepository.save(existingPatient);
+        PatientRegistrationDTO duplicateRegistrationDTO = new PatientRegistrationDTO("John Doe", "johndoe@test.com", "11999998888");
+        //Act & Assert
+        mockMvc.perform(post("/patients")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(duplicateRegistrationDTO)))
+                .andExpect(status().isConflict());
+
+    }
 
     @Test
+    @Transactional
     public void register_WhenInvalidData_ShouldReturnBadRequest() throws Exception {
         //Arrange
         PatientRegistrationDTO dummyRegistrationDTO = new PatientRegistrationDTO("", "invalid-email", "123");
@@ -61,6 +78,7 @@ public class PatientControllerTest {
     }
 
     @Test
+    @Transactional
     public void listAllWhenPatientsExist_ShouldReturnOk() throws Exception{
         //Arrange
         Patient patient1 = new Patient(null, "Alice Smith", "alicesmith@test.com", "11988887777");
@@ -77,4 +95,32 @@ public class PatientControllerTest {
 
     }
 
+    @Test
+    @Transactional
+    public void getById_WhenPatientExists_ShouldReturnOk() throws Exception{
+        //Arrange
+        Patient dummyPatient = new Patient(null, "John Doe", "johndoe@test.com", "11999998888");
+        Patient savedPatient = patientRepository.save(dummyPatient);
+
+        //Act & Assert
+        mockMvc.perform(get("/patients/{id}", savedPatient.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name", is("John Doe")))
+                .andExpect(jsonPath("$.email", is("johndoe@test.com")))
+                .andExpect(jsonPath("$.phone", is("11999998888")));
+
+
+    }
+
+    @Test
+    @Transactional
+    public void getById_WhenPatientDoesNotExist_ShouldReturnNotFound() throws Exception{
+        //Arrange empty
+        //Act & Assert
+        mockMvc.perform(get("/patients/{id}", 99L)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+    }
 }
