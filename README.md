@@ -31,7 +31,7 @@ A RESTful API for managing a clinic's patients. This is a portfolio project buil
 1.  Ensure you have Java 17 (JDK) and Docker installed.
 2.  Clone the repository:
     ```bash
-    git clone [https://github.com/brunolegal/clinic-api.git](https://github.com/brunolegal/clinic-api.git)
+    git clone https://github.com/brunolegal/clinic-api.git
     cd clinic-api
     ```
 3.  Start the PostgreSQL database using Docker:
