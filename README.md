@@ -9,8 +9,8 @@ A RESTful API for managing a clinic's patients. This is a portfolio project buil
 - [x] **Patient Management (CRUD)**
     - [x] Register new Patient (`POST /patients`)
     - [x] List all Patients (`GET /patients`)
-    - [ ] Get Patient details by ID (`GET /patients/{id}`)
-    - [ ] Update Patient data (`PUT /patients/{id}`)
+    - [x] Get Patient details by ID (`GET /patients/{id}`)
+    - [x] Update Patient data (`PUT /patients/{id}`)
     - [ ] Delete Patient (Logical Deletion) (`DELETE /patients/{id}`)
 - [ ] **Appointment Management (CRUD)**
     - [ ] Schedule new appointment
@@ -45,8 +45,10 @@ A RESTful API for managing a clinic's patients. This is a portfolio project buil
 5.  The application will be available at `http://localhost:8080`.
 
 ## API Endpoints
-| Method | Endpoint         | Description                     |
-|--------|------------------|---------------------------------|
-| `POST` | `/patients`      | Registers a new patient         |
-| `GET`  | `/patients`      | Lists all patients              |
-| `PUT`  | `/patients/{id}` | Updates specific patient (Soon) |
+| Method   | Endpoint         | Description                      |
+|----------|------------------|----------------------------------|
+| `POST`   | `/patients`      | Registers a new patient          |
+| `GET`    | `/patients`      | Lists all patients               |
+| `GET`    | `/patients/{id}` | Return a single patient          |
+| `PUT`    | `/patients/{id}` | Updates specific patient         |
+| `DELETE` | `/patients/{id}` | Removes a specific patient(Soon) |
