@@ -3,6 +3,7 @@ package br.com.brunolegal.clinic_api.service;
 import br.com.brunolegal.clinic_api.domain.Patient;
 import br.com.brunolegal.clinic_api.dto.PatientDetailsDTO;
 import br.com.brunolegal.clinic_api.dto.PatientRegistrationDTO;
+import br.com.brunolegal.clinic_api.dto.PatientUpdateDTO;
 import br.com.brunolegal.clinic_api.exception.DuplicateResourceException;
 import br.com.brunolegal.clinic_api.exception.ResourceNotFoundException;
 import br.com.brunolegal.clinic_api.mapper.PatientMapper;
@@ -14,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +32,13 @@ public class PatientServiceTest {
     @InjectMocks
     private PatientService patientService;
 
+
+
+    /*
+    ------------------
+    Happy Path Tests
+    ------------------
+     */
     @Test
     public void createPatient_WhenEmailIsNew_ShouldReturnPatientDetails(){
         //Arrange
@@ -54,20 +63,6 @@ public class PatientServiceTest {
 
     }
     @Test
-    public void createPatient_WhenEmailAlreadyExists_ShouldThrowException() {
-        //Arrange
-        PatientRegistrationDTO dummyRegistrationDTO = new PatientRegistrationDTO("John Doe", "johndoe@test.com", "11999998888");
-
-        when(patientRepository.existsByEmail(dummyRegistrationDTO.email())).thenReturn(true);
-
-        //Act & Assert
-        assertThrows(DuplicateResourceException.class, () -> patientService.createPatient(dummyRegistrationDTO));
-
-        verify(patientRepository, never()).save(any());
-        verify(patientMapper, never()).toEntity(any());
-    }
-
-    @Test
     public void listAll_WhenPatientsExist_ShouldReturnDtoList(){
         //Arrange
         Patient dummyPatient1 = new Patient(1L, "John Doe", "johndoe@test.com", "11999998888");
@@ -86,7 +81,6 @@ public class PatientServiceTest {
 
 
     }
-
     @Test
     public void getPatientById_WhenPatientExists_ShouldReturnPatientDetails() {
         //Arrange
@@ -107,6 +101,57 @@ public class PatientServiceTest {
     }
 
     @Test
+    public void updatePatient_WhenDataIsValid_ShouldReturnUpdatedPatientDetails(){
+        //Arrange
+        Long patientId = 1L;
+        Patient oldPatient = new Patient(1L, "John Doe", "johndoe@test.com", "11999998888");
+        PatientUpdateDTO updateDTO = new PatientUpdateDTO("John Updated", "johnupdated@test.com", "11977776666");
+        PatientDetailsDTO updatedPatientDetailsDTO = new PatientDetailsDTO(1L, "John Updated", "johnupdated@test.com", "11977776666");
+
+        when(patientRepository.findById(1L)).thenReturn(Optional.of(oldPatient));
+        when(patientRepository.findByEmail(updateDTO.email())).thenReturn(Optional.empty());
+        when(patientRepository.save(oldPatient)).thenReturn(oldPatient);
+        when(patientMapper.toDetailsDto(oldPatient)).thenReturn(updatedPatientDetailsDTO);
+
+        //Act
+        PatientDetailsDTO result = patientService.updatePatient(patientId, updateDTO);
+
+        //Assert
+        assertThat(result).isNotNull();
+        assertThat(result).isEqualTo(updatedPatientDetailsDTO);
+
+        verify(patientRepository).findById(patientId);
+        verify(patientRepository).findByEmail(updateDTO.email());
+        verify(patientRepository).save(oldPatient);
+        verify(patientMapper).toDetailsDto(oldPatient);
+
+    }
+
+
+
+
+    /*
+    -------------------
+     Sad Path Tests
+    -------------------
+    */
+
+
+    @Test
+    public void createPatient_WhenEmailAlreadyExists_ShouldThrowException() {
+        //Arrange
+        PatientRegistrationDTO dummyRegistrationDTO = new PatientRegistrationDTO("John Doe", "johndoe@test.com", "11999998888");
+
+        when(patientRepository.existsByEmail(dummyRegistrationDTO.email())).thenReturn(true);
+
+        //Act & Assert
+        assertThrows(DuplicateResourceException.class, () -> patientService.createPatient(dummyRegistrationDTO));
+
+        verify(patientRepository, never()).save(any());
+        verify(patientMapper, never()).toEntity(any());
+    }
+
+    @Test
     public void getPatientById_WhenPatientDoesNotExist_ShouldThrowException() {
         //Arrange
         Long patientId = 99L;
@@ -118,5 +163,44 @@ public class PatientServiceTest {
         verify(patientRepository).findById(patientId);
         verify(patientMapper, never()).toDetailsDto(any());
     }
+
+    @Test
+    public void updatePatient_WhenPatientDoesNotExist_ShouldThrowException() {
+        //Arrange
+        Long patientId = 99L;
+        PatientUpdateDTO updateDTO = new PatientUpdateDTO("John Updated", "johnupdated@test.com", "11977776666");
+
+        when(patientRepository.findById(patientId)).thenThrow(ResourceNotFoundException.class);
+
+        //Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> patientService.updatePatient(patientId, updateDTO));
+
+        verify(patientRepository).findById(patientId);
+        verify(patientRepository, never()).findByEmail(any());
+        verify(patientRepository, never()).save(any());
+        verify(patientMapper, never()).toDetailsDto(any());
+    }
+
+    @Test
+    public void updatePatient_WhenEmailAlreadyExists_ShouldThrowException(){
+        //Arrange
+        Long patientId = 1L;
+        PatientUpdateDTO updateDTO = new PatientUpdateDTO("John Updated", "coolnewmail@test.com", "11977778888");
+        Patient oldPatient = new Patient(1L, "John Doe", "johndoe@test.com", "11999998888");
+        Patient existingPatient = new Patient(2L, "Jane Smith", "coolnewmail@test.com", "11988887777");
+
+        when(patientRepository.findById(patientId)).thenReturn(Optional.of(oldPatient));
+        when(patientRepository.findByEmail(updateDTO.email())).thenReturn(Optional.of(existingPatient));
+
+        //Act & Assert
+        assertThrows(DuplicateResourceException.class, () -> patientService.updatePatient(patientId, updateDTO));
+
+        verify(patientRepository).findById(patientId);
+        verify(patientRepository).findByEmail(updateDTO.email());
+        verify(patientRepository, never()).save(any());
+        verify(patientMapper, never()).toDetailsDto(any());
+
+    }
+
 
 }
