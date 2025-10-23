@@ -2,6 +2,7 @@ package br.com.brunolegal.clinic_api.controller;
 
 import br.com.brunolegal.clinic_api.domain.Patient;
 import br.com.brunolegal.clinic_api.dto.PatientRegistrationDTO;
+import br.com.brunolegal.clinic_api.dto.PatientUpdateDTO;
 import br.com.brunolegal.clinic_api.repository.PatientRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
@@ -32,6 +33,12 @@ public class PatientControllerTest {
     @Autowired private ObjectMapper objectMapper;
     @Autowired private PatientRepository patientRepository;
 
+    /*
+    ------------------
+    Happy Path Tests
+    ------------------
+     */
+
     @Test
     @Transactional
     public void register_WhenValidData_ShouldReturnCreated() throws Exception {
@@ -46,9 +53,68 @@ public class PatientControllerTest {
                 .andExpect(jsonPath("$.name", is("John Doe"))) // Verifique 'jsonPath' do 'org.springframework.test.web.servlet.result.MockMvcResultMatchers'
                 .andExpect(jsonPath("$.email", is("johndoe@test.com")))
                 .andExpect(jsonPath("$.phone", is("11999998888")));
+    }
+
+    @Test
+    @Transactional
+    public void listAllWhenPatientsExist_ShouldReturnOk() throws Exception{
+        //Arrange
+        Patient patient1 = new Patient(null, "Alice Smith", "alicesmith@test.com", "11988887777");
+        Patient patient2 = new Patient(null, "Bob Johnson", "bobjohnson@test.com", "11977776666");
+        patientRepository.saveAll(List.of(patient1, patient2));
+
+        //Act & Assert
+        mockMvc.perform(get("/patients")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].name", is("Alice Smith")))
+                .andExpect(jsonPath("$[1].name", is("Bob Johnson")));
+
+    }
+
+    @Test
+    @Transactional
+    public void getById_WhenPatientExists_ShouldReturnOk() throws Exception{
+        //Arrange
+        Patient dummyPatient = new Patient(null, "John Doe", "johndoe@test.com", "11999998888");
+        Patient savedPatient = patientRepository.save(dummyPatient);
+
+        //Act & Assert
+        mockMvc.perform(get("/patients/{id}", savedPatient.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name", is("John Doe")))
+                .andExpect(jsonPath("$.email", is("johndoe@test.com")))
+                .andExpect(jsonPath("$.phone", is("11999998888")));
 
 
     }
+
+    @Test
+    @Transactional
+    public void update_WhenValidData_ShouldReturnOk() throws Exception {
+        //Arrange
+        Patient dummyPatient = new Patient(null, "John Doe", "johndoe@test.com", "11999998888");
+        Patient savedPatient = patientRepository.save(dummyPatient);
+        PatientUpdateDTO updateDTO = new PatientUpdateDTO("John Updated", "coolnewmail@test.com", "11911112222");
+
+        //Act & Assert
+        mockMvc.perform(put("/patients/{id}", savedPatient.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name", is(updateDTO.name())))
+                .andExpect(jsonPath("$.email", is(updateDTO.email())))
+                .andExpect(jsonPath("$.phone", is(updateDTO.phone())));
+    }
+
+    /*
+    ------------------
+    Sad Path Tests
+    ------------------
+     */
+
     @Test
     @Transactional
     public void register_WhenDuplicateEmail_ShouldReturnConflict() throws Exception {
@@ -77,41 +143,6 @@ public class PatientControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @Test
-    @Transactional
-    public void listAllWhenPatientsExist_ShouldReturnOk() throws Exception{
-        //Arrange
-        Patient patient1 = new Patient(null, "Alice Smith", "alicesmith@test.com", "11988887777");
-        Patient patient2 = new Patient(null, "Bob Johnson", "bobjohnson@test.com", "11977776666");
-        patientRepository.saveAll(List.of(patient1, patient2));
-
-        //Act & Assert
-        mockMvc.perform(get("/patients")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].name", is("Alice Smith")))
-                .andExpect(jsonPath("$[1].name", is("Bob Johnson")));
-
-    }
-
-    @Test
-    @Transactional
-    public void getById_WhenPatientExists_ShouldReturnOk() throws Exception{
-        //Arrange
-        Patient dummyPatient = new Patient(null, "John Doe", "johndoe@test.com", "11999998888");
-        Patient savedPatient = patientRepository.save(dummyPatient);
-
-        //Act & Assert
-        mockMvc.perform(get("/patients/{id}", savedPatient.getId())
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("John Doe")))
-                .andExpect(jsonPath("$.email", is("johndoe@test.com")))
-                .andExpect(jsonPath("$.phone", is("11999998888")));
-
-
-    }
 
     @Test
     @Transactional
@@ -122,5 +153,36 @@ public class PatientControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
+    }
+
+    @Test
+    @Transactional
+    public void update_WhenPatientDoesNotExist_ShouldReturnNotFound() throws Exception {
+        //Arrange
+        Long nonExistentId = 99L;
+        PatientUpdateDTO updateDTO = new PatientUpdateDTO("John Updated", "coolnewmail@test.com", "11911112222");
+
+        //Act & Assert
+        mockMvc.perform(put("/patients/{id}", nonExistentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isNotFound());
+
+    }
+
+    @Test
+    @Transactional
+    public void update_WhenDuplicateEmail_ShouldReturnConflict() throws Exception {
+        //Arrange
+        Patient patient1 = new Patient(null, "John Doe", "johndoe@test.com", "11999998888");
+        Patient patient2 = new Patient(null, "Jane Smith", "coolnewmail@test.com", "11988887777");
+        patientRepository.saveAll(List.of(patient1, patient2));
+        PatientUpdateDTO updateDTO = new PatientUpdateDTO("John Updated", "coolnewmail@test.com", "11911112222");
+
+        //Act & Assert
+        mockMvc.perform(put("/patients/{id}", patient1.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isConflict());
     }
 }
