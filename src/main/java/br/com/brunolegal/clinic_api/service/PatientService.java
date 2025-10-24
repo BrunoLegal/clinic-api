@@ -37,20 +37,20 @@ public class PatientService {
     }
 
     public PatientDetailsDTO getPatientById(Long id){
-        Patient patient = patientRepository.findById(id)
+        Patient patient = patientRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
         return patientMapper.toDetailsDto(patient);
     }
 
     public List<PatientDetailsDTO> listAll(){
-        List<Patient> patients = patientRepository.findAll();
+        List<Patient> patients = patientRepository.findAllByActiveTrue();
         return patients.stream()
                 .map(patientMapper::toDetailsDto)
                 .collect(Collectors.toList());
     }
 
     public PatientDetailsDTO updatePatient(Long id, PatientUpdateDTO dto){
-        Patient patient = patientRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+        Patient patient = patientRepository.findByIdAndActiveTrue(id).orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
         Optional<Patient> patientByEmail = patientRepository.findByEmail(dto.email());
         if(patientByEmail.isPresent() && !patientByEmail.get().getId().equals(id)){
             throw new DuplicateResourceException("Email already in use");
@@ -65,7 +65,7 @@ public class PatientService {
     }
     //Logic delete: set active to false
     public void deletePatient(Long id){
-        Patient patient = patientRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+        Patient patient = patientRepository.findByIdAndActiveTrue(id).orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
         patient.setActive(false);
 

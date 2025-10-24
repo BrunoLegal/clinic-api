@@ -64,7 +64,9 @@ public class PatientControllerTest {
         //Arrange
         Patient patient1 = new Patient(null, "Alice Smith", "alicesmith@test.com", "11988887777");
         Patient patient2 = new Patient(null, "Bob Johnson", "bobjohnson@test.com", "11977776666");
-        patientRepository.saveAll(List.of(patient1, patient2));
+        Patient inactivePatient = new Patient(null, "Inactive Patient", "inactive@test.com", "11966665555", false);
+
+        patientRepository.saveAll(List.of(patient1,patient2, inactivePatient));
 
         //Act & Assert
         mockMvc.perform(get("/patients")
@@ -208,5 +210,17 @@ public class PatientControllerTest {
     public void delete_WhenPatientDoesNotExist_ShouldReturnNotFound() throws Exception {
         //Act & Assert
         mockMvc.perform(delete("/patients/{id}", 99L)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Transactional
+    public void whenPatientIsInactive_ShouldReturnNotFound() throws Exception{
+        //Arrange
+        Patient inactivePatient = new Patient(null, "Inactive Patient", "inactive@test.com", "11966665555", false);
+        Patient savedPatient = patientRepository.save(inactivePatient);
+        //Act & Assert
+        mockMvc.perform(get("/patients/{id}", savedPatient.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 }
