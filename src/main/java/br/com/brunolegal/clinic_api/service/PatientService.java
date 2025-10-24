@@ -63,6 +63,15 @@ public class PatientService {
         Patient updatedPatient = patientRepository.save(patient);
         return patientMapper.toDetailsDto(updatedPatient);
     }
+    //Logic delete: set active to false
+    public void deletePatient(Long id){
+        Patient patient = patientRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+
+        patient.setActive(false);
+
+        patientRepository.save(patient);
+
+    }
 
 
 

@@ -29,9 +29,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 public class PatientControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private PatientRepository patientRepository;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private PatientRepository patientRepository;
 
     /*
     ------------------
@@ -57,7 +60,7 @@ public class PatientControllerTest {
 
     @Test
     @Transactional
-    public void listAllWhenPatientsExist_ShouldReturnOk() throws Exception{
+    public void listAllWhenPatientsExist_ShouldReturnOk() throws Exception {
         //Arrange
         Patient patient1 = new Patient(null, "Alice Smith", "alicesmith@test.com", "11988887777");
         Patient patient2 = new Patient(null, "Bob Johnson", "bobjohnson@test.com", "11977776666");
@@ -75,7 +78,7 @@ public class PatientControllerTest {
 
     @Test
     @Transactional
-    public void getById_WhenPatientExists_ShouldReturnOk() throws Exception{
+    public void getById_WhenPatientExists_ShouldReturnOk() throws Exception {
         //Arrange
         Patient dummyPatient = new Patient(null, "John Doe", "johndoe@test.com", "11999998888");
         Patient savedPatient = patientRepository.save(dummyPatient);
@@ -108,6 +111,20 @@ public class PatientControllerTest {
                 .andExpect(jsonPath("$.email", is(updateDTO.email())))
                 .andExpect(jsonPath("$.phone", is(updateDTO.phone())));
     }
+
+    @Test
+    @Transactional
+    public void delete_WhenPatientExists_ShouldReturnNoContent() throws Exception {
+        //Arrange
+        Patient dummyPatient = new Patient(null, "John Doe", "johndoe@test.com", "11999998888");
+        Patient savedPatient = patientRepository.save(dummyPatient);
+
+        //Act & Assert
+        mockMvc.perform(delete("/patients/{id}", savedPatient.getId()))
+                .andExpect(status().isNoContent());
+    }
+
+
 
     /*
     ------------------
@@ -184,5 +201,12 @@ public class PatientControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    @Transactional
+    public void delete_WhenPatientDoesNotExist_ShouldReturnNotFound() throws Exception {
+        //Act & Assert
+        mockMvc.perform(delete("/patients/{id}", 99L)).andExpect(status().isNotFound());
     }
 }

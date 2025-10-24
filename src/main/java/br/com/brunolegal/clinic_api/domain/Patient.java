@@ -31,4 +31,16 @@ public class Patient {
     @NotBlank
     @Pattern(regexp = "\\d{10,11}") //validates between 10 and 11 numbers for the phone
     private String phone;
+
+    private Boolean active = true;
+
+    public Patient(Long id, String name, String email, String phone) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.active = true;
+    }
 }
+
+

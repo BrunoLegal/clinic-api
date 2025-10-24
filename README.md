@@ -11,7 +11,7 @@ A RESTful API for managing a clinic's patients. This is a portfolio project buil
     - [x] List all Patients (`GET /patients`)
     - [x] Get Patient details by ID (`GET /patients/{id}`)
     - [x] Update Patient data (`PUT /patients/{id}`)
-    - [ ] Delete Patient (Logical Deletion) (`DELETE /patients/{id}`)
+    - [x] Delete Patient (Logical Deletion) (`DELETE /patients/{id}`)
 - [ ] **Appointment Management (CRUD)**
     - [ ] Schedule new appointment
 
@@ -51,4 +51,4 @@ A RESTful API for managing a clinic's patients. This is a portfolio project buil
 | `GET`    | `/patients`      | Lists all patients               |
 | `GET`    | `/patients/{id}` | Return a single patient          |
 | `PUT`    | `/patients/{id}` | Updates specific patient         |
-| `DELETE` | `/patients/{id}` | Removes a specific patient(Soon) |
+| `DELETE` | `/patients/{id}` | Removes a specific patient |
