@@ -127,6 +127,23 @@ public class PatientServiceTest {
 
     }
 
+    @Test
+    public void deletePatient_WhenPatientExists_ShouldSetActiveToFalse(){
+        //Arrange
+        Patient dummyPatient = new Patient(null, "John Doe", "johndoe@test.com", "11999998888", true);
+
+        when(patientRepository.findById(1L)).thenReturn(Optional.of(dummyPatient));
+
+        //Act
+        patientService.deletePatient(1L);
+
+        //Assert
+        verify(patientRepository).findById(1L);
+        verify(patientRepository).save(dummyPatient);
+        assertThat(dummyPatient.getActive()).isFalse();
+
+    }
+
 
 
 
@@ -200,6 +217,20 @@ public class PatientServiceTest {
         verify(patientRepository, never()).save(any());
         verify(patientMapper, never()).toDetailsDto(any());
 
+    }
+
+    @Test
+    public void deletePatient_WhenPatientDoesNotExist_ShouldThrowException(){
+        //Arrange
+        Long patientId = 99L;
+
+        when(patientRepository.findById(patientId)).thenReturn(Optional.empty());
+
+        //Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> patientService.deletePatient(patientId));
+
+        verify(patientRepository).findById(patientId);
+        verify(patientRepository, never()).save(any());
     }
 
 
