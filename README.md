@@ -12,8 +12,7 @@ A RESTful API for managing a clinic's patients. This is a portfolio project buil
     - [x] Get Patient details by ID (`GET /patients/{id}`)
     - [x] Update Patient data (`PUT /patients/{id}`)
     - [x] Delete Patient (Soft delete) (`DELETE /patients/{id}`)
-- [ ] **Appointment Management (CRUD)**
-    - [ ] Schedule new appointment
+
 
 ## Technologies Used
 - **Back-end:** Java 17, Spring Boot 3, Bean Validation (JSR 380)
