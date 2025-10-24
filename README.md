@@ -65,7 +65,7 @@ The project follows a layered architecture to ensure separation of concerns and 
 {
     "name": "John Doe",
     "email": "johndoe@example.com",
-    "phone": "123-456-7890"
+    "phone": "11999998888"
 }
 ```
 - **Success Response:** `201 Created`
