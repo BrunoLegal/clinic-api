@@ -69,7 +69,7 @@ public class PatientServiceTest {
         Patient dummyPatient2 = new Patient(2L, "Jane Smith", "janesmith@test.com", "11988887777");
         List<Patient> dummyPatientList = List.of(dummyPatient1, dummyPatient2);
 
-        when(patientRepository.findAll()).thenReturn(dummyPatientList);
+        when(patientRepository.findAllByActiveTrue()).thenReturn(dummyPatientList);
 
         //Act
         List<PatientDetailsDTO> result = patientService.listAll();
@@ -77,7 +77,7 @@ public class PatientServiceTest {
         //Assert
         assertThat(result).isNotNull();
         assertThat(result).hasSize(2);
-        verify(patientRepository).findAll();
+        verify(patientRepository).findAllByActiveTrue();
 
 
     }
@@ -87,7 +87,7 @@ public class PatientServiceTest {
         Long patientId = 1L;
         Patient dummyPatient = new Patient(patientId, "John Doe", "johndoe@test.com", "11999998888");
         PatientDetailsDTO dummyPatientDetailsDTO = new PatientDetailsDTO(patientId, "John Doe", "johndoe@test.com", "11999998888");
-        when(patientRepository.findById(patientId)).thenReturn(java.util.Optional.of(dummyPatient));
+        when(patientRepository.findByIdAndActiveTrue(patientId)).thenReturn(java.util.Optional.of(dummyPatient));
         when(patientMapper.toDetailsDto(dummyPatient)).thenReturn(dummyPatientDetailsDTO);
 
         //Act
@@ -96,7 +96,7 @@ public class PatientServiceTest {
         //Assert
         assertThat(result).isNotNull();
         assertThat(result).isEqualTo(dummyPatientDetailsDTO);
-        verify(patientRepository).findById(patientId);
+        verify(patientRepository).findByIdAndActiveTrue(patientId);
 
     }
 
@@ -108,7 +108,7 @@ public class PatientServiceTest {
         PatientUpdateDTO updateDTO = new PatientUpdateDTO("John Updated", "johnupdated@test.com", "11977776666");
         PatientDetailsDTO updatedPatientDetailsDTO = new PatientDetailsDTO(1L, "John Updated", "johnupdated@test.com", "11977776666");
 
-        when(patientRepository.findById(1L)).thenReturn(Optional.of(oldPatient));
+        when(patientRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(oldPatient));
         when(patientRepository.findByEmail(updateDTO.email())).thenReturn(Optional.empty());
         when(patientRepository.save(oldPatient)).thenReturn(oldPatient);
         when(patientMapper.toDetailsDto(oldPatient)).thenReturn(updatedPatientDetailsDTO);
@@ -120,7 +120,7 @@ public class PatientServiceTest {
         assertThat(result).isNotNull();
         assertThat(result).isEqualTo(updatedPatientDetailsDTO);
 
-        verify(patientRepository).findById(patientId);
+        verify(patientRepository).findByIdAndActiveTrue(patientId);
         verify(patientRepository).findByEmail(updateDTO.email());
         verify(patientRepository).save(oldPatient);
         verify(patientMapper).toDetailsDto(oldPatient);
@@ -132,13 +132,13 @@ public class PatientServiceTest {
         //Arrange
         Patient dummyPatient = new Patient(null, "John Doe", "johndoe@test.com", "11999998888", true);
 
-        when(patientRepository.findById(1L)).thenReturn(Optional.of(dummyPatient));
+        when(patientRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(dummyPatient));
 
         //Act
         patientService.deletePatient(1L);
 
         //Assert
-        verify(patientRepository).findById(1L);
+        verify(patientRepository).findByIdAndActiveTrue(1L);
         verify(patientRepository).save(dummyPatient);
         assertThat(dummyPatient.getActive()).isFalse();
 
@@ -172,12 +172,12 @@ public class PatientServiceTest {
     public void getPatientById_WhenPatientDoesNotExist_ShouldThrowException() {
         //Arrange
         Long patientId = 99L;
-        when(patientRepository.findById(patientId)).thenReturn(java.util.Optional.empty());
+        when(patientRepository.findByIdAndActiveTrue(patientId)).thenReturn(java.util.Optional.empty());
 
         //Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> patientService.getPatientById(patientId));
 
-        verify(patientRepository).findById(patientId);
+        verify(patientRepository).findByIdAndActiveTrue(patientId);
         verify(patientMapper, never()).toDetailsDto(any());
     }
 
@@ -187,12 +187,12 @@ public class PatientServiceTest {
         Long patientId = 99L;
         PatientUpdateDTO updateDTO = new PatientUpdateDTO("John Updated", "johnupdated@test.com", "11977776666");
 
-        when(patientRepository.findById(patientId)).thenThrow(ResourceNotFoundException.class);
+        when(patientRepository.findByIdAndActiveTrue(patientId)).thenThrow(ResourceNotFoundException.class);
 
         //Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> patientService.updatePatient(patientId, updateDTO));
 
-        verify(patientRepository).findById(patientId);
+        verify(patientRepository).findByIdAndActiveTrue(patientId);
         verify(patientRepository, never()).findByEmail(any());
         verify(patientRepository, never()).save(any());
         verify(patientMapper, never()).toDetailsDto(any());
@@ -206,13 +206,13 @@ public class PatientServiceTest {
         Patient oldPatient = new Patient(1L, "John Doe", "johndoe@test.com", "11999998888");
         Patient existingPatient = new Patient(2L, "Jane Smith", "coolnewmail@test.com", "11988887777");
 
-        when(patientRepository.findById(patientId)).thenReturn(Optional.of(oldPatient));
+        when(patientRepository.findByIdAndActiveTrue(patientId)).thenReturn(Optional.of(oldPatient));
         when(patientRepository.findByEmail(updateDTO.email())).thenReturn(Optional.of(existingPatient));
 
         //Act & Assert
         assertThrows(DuplicateResourceException.class, () -> patientService.updatePatient(patientId, updateDTO));
 
-        verify(patientRepository).findById(patientId);
+        verify(patientRepository).findByIdAndActiveTrue(patientId);
         verify(patientRepository).findByEmail(updateDTO.email());
         verify(patientRepository, never()).save(any());
         verify(patientMapper, never()).toDetailsDto(any());
@@ -224,12 +224,12 @@ public class PatientServiceTest {
         //Arrange
         Long patientId = 99L;
 
-        when(patientRepository.findById(patientId)).thenReturn(Optional.empty());
+        when(patientRepository.findByIdAndActiveTrue(patientId)).thenReturn(Optional.empty());
 
         //Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> patientService.deletePatient(patientId));
 
-        verify(patientRepository).findById(patientId);
+        verify(patientRepository).findByIdAndActiveTrue(patientId);
         verify(patientRepository, never()).save(any());
     }
 
